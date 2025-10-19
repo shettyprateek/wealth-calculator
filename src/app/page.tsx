@@ -1,6 +1,7 @@
 "use client";
 import { ChangeEvent, useEffect, useState } from "react";
 import PieChart from "./components/PieChart";
+import Image from "next/image";
 
 export default function Home() {
   type FinancialItem = { name: string; value: string };
@@ -112,7 +113,20 @@ export default function Home() {
   return (
     <main className="flex flex-col items-center justify-center mt-4 mb-8 space-y-8 px-2">
       {/* Forms first */}
-      <h1 className="text-3xl font-bold text-green-600">Wealth Calculator</h1>
+      <div className="flex items-center justify-center">
+        <Image
+          className="dark:invert"
+          src="/rupee.png"
+          alt="Rupee logo"
+          width={32}
+          height={32}
+          priority
+        />
+        <h1 className="ml-4 text-4xl font-bold text-green-600">
+          Wealth Calculator
+        </h1>
+      </div>
+
       <div className="flex flex-row gap-2 justify-center w-full flex-wrap">
         {/* Assets Form */}
         <div className="flex flex-col w-40 sm:w-64 md:w-[336px] gap-4">
