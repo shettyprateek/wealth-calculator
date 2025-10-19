@@ -1,66 +1,57 @@
 "use client";
 import { Doughnut } from "react-chartjs-2";
-import {
-  Chart as ChartJS,
-  ArcElement,
-  Tooltip,
-  Legend,
-  Plugin,
-} from "chart.js";
+import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
-type PieChartProps = {
-  totalAssets: number;
-  totalLiabilities: number;
-  netWorth: number;
+type FinancialItem = {
+  name: string;
+  value: string;
 };
 
-export default function PieChart({
-  totalAssets,
-  totalLiabilities,
-  netWorth,
-}: PieChartProps) {
-  const data = {
-    labels: ["Assets", "Liabilities"],
+type PieChartProps = {
+  title: string;
+  data: FinancialItem[];
+  colorScheme: "green" | "red";
+};
+
+export default function PieChart({ title, data, colorScheme }: PieChartProps) {
+  const total = data.reduce(
+    (acc, item) => acc + Number(item.value.replace(/,/g, "") || 0),
+    0
+  );
+
+  const colors =
+    colorScheme === "green"
+      ? ["#15803d", "#22c55e", "#86efac", "#00e7fc", "#00a9ff"]
+      : ["#b91c1c", "#f97316", "#facc15"];
+
+  const chartData = {
+    labels: data.map((item) => item.name),
     datasets: [
       {
-        data: netWorth ? [totalAssets, totalLiabilities] : [1, 1],
-        backgroundColor: netWorth
-          ? ["#16a34a", "#dc2626"]
-          : ["#e5e7eb", "#e5e7eb"],
-        borderColor: ["#ffffff", "#ffffff"],
+        data: total
+          ? data.map((item) => Number(item.value.replace(/,/g, "")) || 0)
+          : [1],
+        backgroundColor: total ? colors : ["#e5e7eb"],
+        borderColor: "#fff",
         borderWidth: 2,
       },
     ],
   };
 
-  // Plugin to draw text in center
-  const centerTextPlugin: Plugin = {
-    id: "centerText",
-    beforeDraw(chart) {
-      const { width, height, ctx } = chart;
-      ctx.save();
-      const text = netWorth ? `₹${netWorth}` : "₹0";
-      ctx.font = "bold 24px sans-serif";
-      ctx.fillStyle = "#111827"; // dark gray
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(text, width / 2, height / 2);
-    },
-  };
-
   const options = {
     responsive: true,
-    cutout: "70%", // donut thickness
+    maintainAspectRatio: false,
+    cutout: "70%",
     plugins: {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: function (context: any) {
+          label: (context: any) => {
             const label = context.label;
             const value = context.raw;
-            if (!netWorth) return `${label}: ₹0`;
+            if (!total) return `${label}: ₹0`;
             return `${label}: ₹${value.toLocaleString("en-IN")}`;
           },
         },
@@ -69,11 +60,23 @@ export default function PieChart({
   };
 
   return (
-    <Doughnut
-      key={netWorth}
-      data={data}
-      options={options}
-      plugins={[centerTextPlugin]}
-    />
+    <div className="flex flex-col items-center bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-md">
+      <h2
+        className={`text-xl font-bold mb-4 ${
+          colorScheme === "green" ? "text-green-600" : "text-red-600"
+        }`}
+      >
+        {title}
+      </h2>
+
+      {/* Responsive chart size */}
+      <div className="w-25 h-25 sm:w-64 sm:h-64 md:w-72 md:h-72">
+        <Doughnut data={chartData} options={options} />
+      </div>
+
+      <p className="mt-4 text-gray-700 dark:text-gray-300 font-semibold">
+        Total: ₹{total.toLocaleString("en-IN")}
+      </p>
+    </div>
   );
 }
