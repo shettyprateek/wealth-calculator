@@ -1,103 +1,157 @@
-import Image from "next/image";
+"use client";
+import { ChangeEvent, useEffect, useState } from "react";
+import PieChart from "./components/PieChart";
 
 export default function Home() {
-  return (
-    <div className="font-sans grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="font-mono list-inside list-decimal text-sm/6 text-center sm:text-left">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] font-mono font-semibold px-1 py-0.5 rounded">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  type FinancialItem = {
+    name: string;
+    value: string;
+  };
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  type FinancialCategory = {
+    category: "Assets" | "Liabilities";
+    items: FinancialItem[];
+  };
+
+  const financialData: FinancialCategory[] = [
+    {
+      category: "Assets",
+      items: [
+        { name: "Cash", value: "" },
+        { name: "Stocks", value: "" },
+        { name: "Mutual Funds", value: "" },
+        { name: "Gold/Silver", value: "" },
+        { name: "Real Estate", value: "" },
+      ],
+    },
+    {
+      category: "Liabilities",
+      items: [
+        { name: "Credit Card", value: "" },
+        { name: "Home Loan", value: "" },
+        { name: "Vehicle Loan", value: "" },
+      ],
+    },
+  ];
+
+  const [netWorth, setNetWorth] = useState(0);
+  const [assets, setAssets] = useState(financialData[0].items);
+  const [liabilities, setLiabilities] = useState(financialData[1].items);
+  const [totalAssets, setTotalAssets] = useState(0);
+  const [totalLiabilities, setTotalLiabilities] = useState(0);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true); // mark client mount
+  }, []);
+
+  const formatNumber = (value: string) => {
+    const raw = value.replace(/,/g, "");
+    if (raw === "" || isNaN(Number(raw))) return "";
+    return Number(raw).toLocaleString("en-IN"); // Indian format (1,00,000)
+  };
+
+  const handleAssetChange = (
+    index: number,
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const formatted = formatNumber(event.target.value);
+    const updated = [...assets];
+    updated[index].value = formatted;
+    setAssets(updated);
+    calculateWealth();
+  };
+
+  function handleLiabilityChange(
+    index: number,
+    event: ChangeEvent<HTMLInputElement>
+  ): void {
+    const formatted = formatNumber(event.target.value);
+    const updated = [...liabilities];
+    updated[index].value = formatted;
+    setLiabilities(updated);
+    calculateWealth();
+  }
+
+  const calculateWealth = () => {
+    const totalAssets = assets.reduce((acc, sum) => {
+      const total = acc + Number(sum.value.replaceAll(",", ""));
+      return total;
+    }, 0);
+    setTotalAssets(totalAssets);
+
+    const totalLiabilities = liabilities.reduce((acc, sum) => {
+      const total = acc + Number(sum.value.replaceAll(",", ""));
+      return total;
+    }, 0);
+
+    setTotalLiabilities(totalLiabilities);
+    const yourNetWorth = totalAssets - totalLiabilities;
+    setNetWorth(yourNetWorth);
+  };
+
+  if (!mounted) return null;
+
+  return (
+    <main className="flex flex-col items-center justify-center my-4">
+      <div className="flex flex-col items-center">
+        <h1 className="text-4xl font-semibold">Your Wealth</h1>
+      </div>
+      <div className="flex flex-col">
+        <div className="p-2">
+          <PieChart
+            totalAssets={totalAssets}
+            totalLiabilities={totalLiabilities}
+            netWorth={netWorth}
+          />
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+      </div>
+      <div className="flex m-4">
+        <div className="flex mr-2 flex-col bg-white dark:bg-gray-800 p-6 border border-green-600 rounded-2xl shadow-lg w-full md:w-1/2">
+          <h1 className="text-3xl font-bold text-green-600 mb-4">Assets 💰</h1>
+
+          {assets.map((asset, index) => (
+            <div
+              key={index}
+              className="pt-4 text-lg flex flex-col gap-2 border-b border-gray-200 dark:border-gray-700 pb-4"
+            >
+              <label className="font-semibold text-gray-700 dark:text-gray-300">
+                {asset.name}
+              </label>
+              <input
+                type="text"
+                value={asset.value}
+                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-green-400 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:text-white"
+                onChange={(event) => handleAssetChange(index, event)}
+                maxLength={12}
+              />
+            </div>
+          ))}
+        </div>
+        <div className="flex flex-col border border-red-600 bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg w-full md:w-1/2">
+          <h1 className="text-3xl font-bold text-red-600 mb-4">
+            Liabilities 💳
+          </h1>
+
+          {liabilities.map((liability, index) => (
+            <div
+              key={index}
+              className="pt-4 text-lg flex flex-col gap-2 border-b border-gray-200 dark:border-gray-700 pb-4"
+            >
+              <label className="font-semibold text-gray-700 dark:text-gray-300">
+                {liability.name}
+              </label>
+              <input
+                type="text"
+                value={liability.value}
+                onChange={(event) => handleLiabilityChange(index, event)}
+                className="border border-gray-300 dark:border-gray-600 rounded-lg px-3 py-2 focus:ring-2 focus:ring-red-400 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:text-white"
+                placeholder="Enter amount"
+              />
+            </div>
+          ))}
+        </div>
+      </div>
+    </main>
   );
 }
