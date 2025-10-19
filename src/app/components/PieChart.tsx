@@ -1,6 +1,12 @@
 "use client";
 import { Doughnut } from "react-chartjs-2";
-import { Chart as ChartJS, ArcElement, Tooltip, Legend } from "chart.js";
+import {
+  Chart as ChartJS,
+  ArcElement,
+  Tooltip,
+  Legend,
+  TooltipItem,
+} from "chart.js";
 
 ChartJS.register(ArcElement, Tooltip, Legend);
 
@@ -48,9 +54,9 @@ export default function PieChart({ title, data, colorScheme }: PieChartProps) {
       legend: { display: false },
       tooltip: {
         callbacks: {
-          label: (context: any) => {
+          label: (context: TooltipItem<"doughnut">) => {
             const label = context.label;
-            const value = context.raw;
+            const value = context.raw as number;
             if (!total) return `${label}: ₹0`;
             return `${label}: ₹${value.toLocaleString("en-IN")}`;
           },
