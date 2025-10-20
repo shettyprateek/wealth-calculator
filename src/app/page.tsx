@@ -48,7 +48,6 @@ export default function Home() {
       storedLiabilities ? JSON.parse(storedLiabilities) : financialData[1].items
     );
     setNetWorth(storedNetWorth ? Number(storedNetWorth.replace(/,/g, "")) : 0);
-
     setMounted(true);
   }, []);
 
@@ -61,9 +60,16 @@ export default function Home() {
   }, [assets, liabilities, netWorth, mounted]);
 
   const formatNumber = (value: string) => {
+    // Remove commas but keep decimal point
     const raw = value.replace(/,/g, "");
     if (raw === "" || isNaN(Number(raw))) return "";
-    return Number(raw).toLocaleString("en-IN");
+
+    // Convert back to locale string but preserve up to 2 decimals
+    const [intPart, decimalPart] = raw.split(".");
+    const formattedInt = Number(intPart).toLocaleString("en-IN");
+    return decimalPart !== undefined
+      ? `${formattedInt}.${decimalPart}`
+      : formattedInt;
   };
 
   const calculateWealth = (
@@ -89,6 +95,38 @@ export default function Home() {
     updated[index].value = formatNumber(e.target.value);
     setAssets(updated);
     calculateWealth(updated, liabilities);
+  };
+
+  const handleKeyDown = (
+    e: React.KeyboardEvent<HTMLInputElement>,
+    nextIndex: number,
+    type: "asset" | "liability"
+  ) => {
+    console.log(e.key);
+    if (e.key === "Enter") {
+      e.preventDefault();
+      let nextId: string | null = null;
+
+      if (type === "asset") {
+        // Move to next asset or first liability
+        if (nextIndex < assets.length) {
+          nextId = `asset-${nextIndex}`;
+        } else {
+          nextId = "liability-0";
+        }
+      } else if (type === "liability") {
+        // Move to next liability or back to first asset
+        if (nextIndex < liabilities.length) {
+          nextId = `liability-${nextIndex}`;
+        } else {
+          nextId = "asset-0";
+        }
+      }
+
+      // Focus the next input
+      const nextInput = document.getElementById(nextId);
+      if (nextInput) nextInput.focus();
+    }
   };
 
   const handleLiabilityChange = (
@@ -141,9 +179,11 @@ export default function Home() {
                   {asset.name}
                 </label>
                 <input
+                  id={`asset-${idx}`}
                   type="text"
                   value={asset.value}
                   onChange={(e) => handleAssetChange(idx, e)}
+                  onKeyDown={(e) => handleKeyDown(e, idx + 1, "asset")}
                   className="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 focus:ring-2 focus:ring-green-400 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:text-white"
                   placeholder="Enter amount"
                 />
@@ -167,9 +207,11 @@ export default function Home() {
                   {liability.name}
                 </label>
                 <input
+                  id={`liability-${idx}`}
                   type="text"
                   value={liability.value}
                   onChange={(e) => handleLiabilityChange(idx, e)}
+                  onKeyDown={(e) => handleKeyDown(e, idx + 1, "liability")}
                   className="border border-gray-300 dark:border-gray-600 rounded-lg px-2 py-1 focus:ring-2 focus:ring-red-400 focus:outline-none bg-gray-50 dark:bg-gray-700 dark:text-white"
                   placeholder="Enter amount"
                 />
