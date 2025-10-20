@@ -76,7 +76,7 @@ export default function PieChart({ title, data, colorScheme }: PieChartProps) {
       </h2>
 
       {/* Responsive chart size */}
-      <div className="w-25 h-25 sm:w-64 sm:h-64 md:w-72 md:h-72">
+      <div className="sm:w-64 sm:h-64 md:w-72 md:h-72">
         <Doughnut data={chartData} options={options} />
       </div>
 
