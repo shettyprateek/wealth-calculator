@@ -105,7 +105,7 @@ export default function Home() {
     console.log(e.key);
     if (e.key === "Enter") {
       e.preventDefault();
-      let nextId: string | null = null;
+      let nextId: string = "";
 
       if (type === "asset") {
         // Move to next asset or first liability
